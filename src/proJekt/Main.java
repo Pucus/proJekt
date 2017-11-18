@@ -1,9 +1,16 @@
-package proJekt;
+/*package proJekt;
+
 
 public class Main {
 
 	public static void main(String[] args) {
-		System.out.println("Hello world!");
+		try {
+			MainView window = new MainView();
+			window.open();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
+*/
