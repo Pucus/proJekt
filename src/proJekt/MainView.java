@@ -1,4 +1,4 @@
-package proJekt;
+/*package proJekt;
 
 
 import java.io.File;
@@ -39,6 +39,7 @@ public class MainView {
 	/**
 	 * Open the window.
 	 */
+/*
 	public void open() {
 		Display display = Display.getDefault();
 		createContents();
@@ -49,11 +50,12 @@ public class MainView {
 				display.sleep();
 			}
 		}
-	}
+	}*/
 
 	/**
 	 * Create contents of the window.
 	 */
+	/*
 	protected void createContents() {
 		shell = new Shell();
 		shell.setMinimumSize(new Point(700, 600));
@@ -178,4 +180,4 @@ public class MainView {
 		
 		
 	}
-}
+} */

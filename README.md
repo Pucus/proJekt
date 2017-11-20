@@ -1,3 +1,3 @@
 druga wersja dzieñ dobry
-witam witam :)
+witam witam
 
