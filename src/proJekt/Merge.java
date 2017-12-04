@@ -1,17 +1,18 @@
 package proJekt;
 
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 public class Merge {
 
-	public static Image optionAND (Image img1, Image img2, int h, int w)
+	public static BufferedImage optionAND (BufferedImage img1, BufferedImage img2)
 	{
+		int w = img1.getWidth();
+		int h = img1.getHeight();
 		BufferedImage merged = new BufferedImage(w, h, BufferedImage.TYPE_INT_BGR);
 		 for(int y = 0; y < h; y++){
 		      for(int x = 0; x < w; x++){
-		        int p = ((BufferedImage) img1).getRGB(x,y);
-		        int q = ((BufferedImage) img2).getRGB(x,y);
+		        int p = img1.getRGB(x,y);
+		        int q = img2.getRGB(x,y);
 
 		        int a1 = (p>>24)&0xff;
 		        int r1 = (p>>16)&0xff;
@@ -26,29 +27,31 @@ public class Merge {
 		        if(a1 == 0 || a2 == 0)
 		        {
 		        	if (a1 == 0)
-		        		((BufferedImage) merged).setRGB(x, y, q);
+		        		merged.setRGB(x, y, q);
 		        	else
-		        		((BufferedImage) merged).setRGB(x, y, p);
+		        		merged.setRGB(x, y, p);
 		        }
 		        else
 		        {
 		        	if (r1 < r2)
-		        		((BufferedImage) merged).setRGB(x, y, p);
+		        		merged.setRGB(x, y, p);
 		        	else 
-		        		((BufferedImage) merged).setRGB(x, y, q);
+		        		merged.setRGB(x, y, q);
 		        }
 		      }
 		 }      
 		return merged;
 	}
 	
-	public static Image optionOR (Image img1, Image img2, int h, int w)
+	public static BufferedImage optionOR (BufferedImage img1, BufferedImage img2)
 	{
+		int w = img1.getWidth();
+		int h = img1.getHeight();
 		BufferedImage merged = new BufferedImage(w, h, BufferedImage.TYPE_INT_BGR);
 		 for(int y = 0; y < h; y++){
 		      for(int x = 0; x < w; x++){
-		        int p = ((BufferedImage) img1).getRGB(x,y);
-		        int q = ((BufferedImage) img2).getRGB(x,y);
+		        int p = img1.getRGB(x,y);
+		        int q = img2.getRGB(x,y);
 
 		        int a1 = (p>>24)&0xff;
 		        int r1 = (p>>16)&0xff;
@@ -63,16 +66,16 @@ public class Merge {
 		        if(a1 == 0 || a2 == 0)
 		        {
 		        	if (a1 == 0)
-		        		((BufferedImage) merged).setRGB(x, y, q);
+		        		merged.setRGB(x, y, q);
 		        	else
-		        		((BufferedImage) merged).setRGB(x, y, p);
+		        		merged.setRGB(x, y, p);
 		        }
 		        else
 		        {
 		        	if (r1 > r2)
-		        		((BufferedImage) merged).setRGB(x, y, p);
+		        		merged.setRGB(x, y, p);
 		        	else 
-		        		((BufferedImage) merged).setRGB(x, y, q);
+		        		merged.setRGB(x, y, q);
 		        }
 		        
 		      }
@@ -80,13 +83,15 @@ public class Merge {
 		return merged;
 	}
 	
-	public static Image optionXOR (Image img1, Image img2, int h, int w)
+	public static BufferedImage optionXOR (BufferedImage img1, BufferedImage img2)
 	{
+		int w = img1.getWidth();
+		int h = img1.getHeight();
 		BufferedImage merged = new BufferedImage(w, h, BufferedImage.TYPE_INT_BGR);
 		 for(int y = 0; y < h; y++){
 		      for(int x = 0; x < w; x++){
-		        int p = ((BufferedImage) img1).getRGB(x,y);
-		        int q = ((BufferedImage) img2).getRGB(x,y);
+		        int p = img1.getRGB(x,y);
+		        int q = img2.getRGB(x,y);
 
 		        int a1 = (p>>24)&0xff;
 		        int r1 = (p>>16)&0xff;
@@ -101,9 +106,9 @@ public class Merge {
 		        if(a1 == 0 || a2 == 0)
 		        {
 		        	if (a1 == 0)
-		        		((BufferedImage) merged).setRGB(x, y, q);
+		        		merged.setRGB(x, y, q);
 		        	else
-		        		((BufferedImage) merged).setRGB(x, y, p);
+		        		merged.setRGB(x, y, p);
 		        }
 		        else
 		        {
@@ -114,7 +119,7 @@ public class Merge {
 		        	p = (a1<<24) | (r<<16) | (g<<8) | b;
 		        
 		    
-		        	((BufferedImage) merged).setRGB(x, y, p);
+		        	merged.setRGB(x, y, p);
 		        }
 		        
 		      }
