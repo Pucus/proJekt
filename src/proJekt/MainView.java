@@ -1,29 +1,44 @@
-/*package proJekt;
+package proJekt;
+
 
 
 import java.io.File;
+
 import javax.swing.JFileChooser;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
+
+import swt.SWTResourceManager;
+
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+
+
 
 public class MainView {
 
 	protected Shell shell;
-
+	Display display;
 	
 	
 	
@@ -36,12 +51,9 @@ public class MainView {
 		}
 	}
 
-	/**
-	 * Open the window.
-	 */
-/*
+
 	public void open() {
-		Display display = Display.getDefault();
+		display = Display.getDefault();
 		createContents();
 		shell.open();
 		shell.layout();
@@ -50,12 +62,8 @@ public class MainView {
 				display.sleep();
 			}
 		}
-	}*/
+	}
 
-	/**
-	 * Create contents of the window.
-	 */
-	/*
 	protected void createContents() {
 		shell = new Shell();
 		shell.setMinimumSize(new Point(700, 600));
@@ -117,15 +125,15 @@ public class MainView {
 		Button btnCutOut = new Button(grpResizingMode, SWT.RADIO);
 		btnCutOut.setText("Cut out center of larger image");
 		
-		Composite composite = new Composite(operationsArea, SWT.NONE);
-		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
+		Composite buttonsArea = new Composite(operationsArea, SWT.NONE);
+		buttonsArea.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
-		Button btnMergeImages = new Button(composite, SWT.NONE);
+		Button btnMergeImages = new Button(buttonsArea, SWT.NONE);
 		btnMergeImages.setForeground(SWTResourceManager.getColor(SWT.COLOR_LIST_FOREGROUND));
 		btnMergeImages.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
 		btnMergeImages.setText("Merge Images");
 		
-		Button btnAddDirectory = new Button(composite, SWT.NONE);
+		Button btnAddDirectory = new Button(buttonsArea, SWT.NONE);
 		btnAddDirectory.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
 		btnAddDirectory.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
 		btnAddDirectory.setText("Add Directory");
@@ -136,10 +144,14 @@ public class MainView {
 		gd_ViewingArea.widthHint = 185;
 		ViewingArea.setLayoutData(gd_ViewingArea);
 		
-		List list = new List(ViewingArea, SWT.BORDER);
-		list.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		CTabFolder tabFolder = new CTabFolder(ViewingArea, SWT.BORDER | SWT.CLOSE);
+		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		
-		btnAddDirectory.addListener(SWT.Selection, new Listener()
+		
+		
+		new Label(shell, SWT.NONE);
+		
+		btnAddDirectory.addListener(SWT.Selection, new Listener() // adding directory function
 		{
 		    @Override
 		    public void handleEvent(Event event)
@@ -150,11 +162,33 @@ public class MainView {
 		    	 chooser.setAcceptAllFileFilterUsed(false);
 		    	    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) 
 		    	    {
-		    	      
-
 		    	    	File[] files = new File(chooser.getSelectedFile().getPath()).listFiles();
-		    	    	//If this pathname does not denote a directory, then listFiles() returns null. 
-
+		    	    	
+		    	    	CTabItem tbtmAdded = new CTabItem(tabFolder, SWT.NONE);
+		    	    	tabFolder.setSelection(tbtmAdded);
+		    	    	tbtmAdded.setText(chooser.getSelectedFile().getPath());
+		    	    	
+		    	    	ScrolledComposite sc = new ScrolledComposite(tabFolder, SWT.V_SCROLL);
+		    	    	
+		    	    	Composite composite = new Composite(sc, SWT.NONE);
+		    	    	composite.setLayout(new RowLayout());
+		    	    	
+		    	    	sc.addControlListener(new ControlAdapter() { //dynamic resize
+		    	    	    public void controlResized(ControlEvent e) {
+		    	    	        Rectangle r = sc.getClientArea();
+		    	    	        sc.setMinSize(composite
+		    	    	                .computeSize(r.width, SWT.DEFAULT));
+		    	    	    }
+		    	    	});
+		    	    	
+		    	    	sc.addListener(SWT.Activate, new Listener() { //mouse roll not working fix
+		    	    		  public void handleEvent(Event e) {
+		    	    		    sc.setFocus();
+		    	    		  }
+		    	    		});
+		    	    	tbtmAdded.setControl(sc);
+		    	    	
+		    	    	boolean notEmpty = false;
 		    	    	for (File file : files) {
 		    	    	    if (file.isFile()) {
 		    	    	    	System.out.println(file.getPath());
@@ -165,19 +199,44 @@ public class MainView {
 		    	    	    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".bmp") ||
 		    	    	    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".tiff") ||
 		    	    	    	file.getPath().substring(file.getPath().lastIndexOf(".")+1, file.getPath().length()).equals(".tif"))
-		    	    	        list.add(file.getName());
+		    	    	    	{
+		    	    	    		Composite cell = new Composite(composite, SWT.NONE);
+		    	    	    		cell.setLayout(new RowLayout());
+		    	    	    		Button mark = new Button(cell, SWT.CHECK);
+		    	    	    		ImageData inputData = new ImageData(file.getPath());
+		    	    	    		inputData = inputData.scaledTo(200*inputData.width/inputData.height, 200);
+		    	    	    		Image inputImg = new Image(display, inputData);
+		    	    	    		Image greyImg = new Image(display, inputImg, SWT.IMAGE_GRAY);
+		    	    	    		Label thumbnail = new Label(cell, SWT.PUSH);
+		    	    	    		thumbnail.setImage(greyImg);
+		    	    	    		inputImg.dispose();
+		    	    	    		if(!notEmpty)
+		    	    	    			notEmpty = true;
+		    	    	    	};
 		    	    	    }
+		    	    	}
+		    	    	if(!notEmpty)
+    	    	    	{
+    	    	    		MessageBox empty = new MessageBox(shell);
+    	    	    		empty.setMessage("No images in the directory");
+    	    	    		tbtmAdded.dispose();
+    	    	    		empty.open();
+    	    	    	}
+		    	    	else
+		    	    	{
+		    	    		sc.setExpandHorizontal(true);
+   	    	    		 	sc.setExpandVertical(true);
+    	    	    		sc.setContent(composite);
+    	    	    		 
+    	    	    		sc.setMinSize(tabFolder.getSize());
 		    	    	}
 		    	    }
 		    	    else 
 		    	      System.out.println("No Selection ");
-		    	      
+		    	
 		    	     }
 		    });
 		
-		new Label(shell, SWT.NONE);
-		
-		
 		
 	}
-} */
+}
