@@ -2,8 +2,12 @@ package proJekt;
 
 
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 
 import org.eclipse.swt.SWT;
@@ -28,6 +32,8 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabFolder2Adapter;
+import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -37,10 +43,15 @@ import org.eclipse.swt.events.ControlEvent;
 
 public class MainView {
 
+	ArrayList<ArrayList<BufferedImage>> imageMatrix;
 	protected Shell shell;
 	Display display;
 	
 	
+	MainView()
+	{
+		imageMatrix = new ArrayList<ArrayList<BufferedImage>>();
+	}
 	
 	public static void main(String[] args) {
 		try {
@@ -147,6 +158,12 @@ public class MainView {
 		CTabFolder tabFolder = new CTabFolder(ViewingArea, SWT.BORDER | SWT.CLOSE);
 		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		
+		tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() {
+			@Override
+				public void close (CTabFolderEvent event) {
+				    imageMatrix.remove(tabFolder.indexOf((CTabItem)event.item));
+		       }
+		});
 		
 		
 		new Label(shell, SWT.NONE);
@@ -176,8 +193,7 @@ public class MainView {
 		    	    	sc.addControlListener(new ControlAdapter() { //dynamic resize
 		    	    	    public void controlResized(ControlEvent e) {
 		    	    	        Rectangle r = sc.getClientArea();
-		    	    	        sc.setMinSize(composite
-		    	    	                .computeSize(r.width, SWT.DEFAULT));
+		    	    	        sc.setMinSize(composite.computeSize(r.width, SWT.DEFAULT));
 		    	    	    }
 		    	    	});
 		    	    	
@@ -188,17 +204,14 @@ public class MainView {
 		    	    		});
 		    	    	tbtmAdded.setControl(sc);
 		    	    	
+		    	    	//Button dirMark = new Button(composite, SWT.CHECK);
 		    	    	boolean notEmpty = false;
+		    	    	ArrayList<BufferedImage> dirImages = new ArrayList<BufferedImage>();
 		    	    	for (File file : files) {
 		    	    	    if (file.isFile()) {
 		    	    	    	System.out.println(file.getPath());
 		    	    	    
-		    	    	    	if(file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".jpg") ||
-		    	    	    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".jpeg") ||
-		    	    	    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".png") ||
-		    	    	    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".bmp") ||
-		    	    	    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".tiff") ||
-		    	    	    	file.getPath().substring(file.getPath().lastIndexOf(".")+1, file.getPath().length()).equals(".tif"))
+		    	    	    	if(isImage(file))
 		    	    	    	{
 		    	    	    		Composite cell = new Composite(composite, SWT.NONE);
 		    	    	    		cell.setLayout(new RowLayout());
@@ -210,6 +223,15 @@ public class MainView {
 		    	    	    		Label thumbnail = new Label(cell, SWT.PUSH);
 		    	    	    		thumbnail.setImage(greyImg);
 		    	    	    		inputImg.dispose();
+		    	    	    	
+		    	    	    		
+		    	    	    		
+		    	    	    		try {
+										dirImages.add(ImageIO.read(file));
+									} catch (IOException e1) {
+										e1.printStackTrace();
+									}
+		    	    	    		
 		    	    	    		if(!notEmpty)
 		    	    	    			notEmpty = true;
 		    	    	    	};
@@ -227,8 +249,9 @@ public class MainView {
 		    	    		sc.setExpandHorizontal(true);
    	    	    		 	sc.setExpandVertical(true);
     	    	    		sc.setContent(composite);
-    	    	    		 
     	    	    		sc.setMinSize(tabFolder.getSize());
+    	    	    		
+    	    	    		imageMatrix.add(dirImages);
 		    	    	}
 		    	    }
 		    	    else 
@@ -237,6 +260,124 @@ public class MainView {
 		    	     }
 		    });
 		
+		btnMergeImages.addListener(SWT.Selection, new Listener(){
+		    @Override
+		    public void handleEvent(Event event)
+		    {
+		    	if(imageMatrix.isEmpty())
+    	    	{
+    	    		MessageBox empty = new MessageBox(shell);
+    	    		empty.setMessage("No directories opened");
+    	    		empty.open();
+    	    		return;
+    	    	}
+		    	ArrayList<BufferedImage> output = new ArrayList<BufferedImage>();
+		    	int maxSize = imageMatrix.get(0).size();
+		    	int maxIndex = 0;
+		    	
+		    	if(btnDefault.getSelection())
+		    	{
+		    		for(int i = 1; i<imageMatrix.size(); i++)
+		    		{
+		    			if(imageMatrix.get(i).size() > maxSize)
+		    			{
+		    				maxSize = imageMatrix.get(i).size();
+		    				maxIndex = i;
+		    			}
+		    		}
+		    		
+		    		for(int i = 0; i<maxSize; i++)
+		    		{
+		    			output.add(IntoGrayscale.grayscale(imageMatrix.get(maxIndex).get(i)));
+		    		}
+		    		
+		    		for(int i = 0; i<imageMatrix.size(); i++)
+		    		{
+		    			if(i!=maxIndex)
+		    			{
+		    				for(int j = 0; j<imageMatrix.get(i).size(); j++)
+		    				{
+		    					ArrayList<BufferedImage> pair = new ArrayList<BufferedImage>();
+		    					if(btnCenter.getSelection())
+		    						pair = Resize.CenterImages(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    					else if(btnEnlarge.getSelection())
+		    						pair = Resize.EnlargeImage(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    					else if(btnShrink.getSelection())
+		    						pair = Resize.ShrinkImage(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    					else
+		    						pair = Resize.CenterLarger(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    					
+		    					if(btnOR.getSelection())
+		    						output.set(j, Merge.optionOR(pair.get(0), pair.get(1)));
+		    					else if(btnAND.getSelection())
+		    						output.set(j, Merge.optionAND(pair.get(0), pair.get(1)));
+		    					else
+		    						output.set(j, Merge.optionXOR(pair.get(0), pair.get(1)));
+		    				}
+		    			}
+		    		}	
+		    	}
+		    	
+		    	
+		    	else if(btnManPickImg.getSelection())
+		    	{
+		    		for(CTabItem item : tabFolder.getItems())
+		    		{
+		    		//	System.out.println(item.);
+		    		}
+		    	}
+		    	
+		    	else if(btnAllInDir.getSelection())
+		    	{
+		    		output.add(IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(0)));
+		    		for(int i = 1; i<imageMatrix.get(tabFolder.getSelectionIndex()).size(); i++)
+		    		{
+		    			ArrayList<BufferedImage> pair = new ArrayList<BufferedImage>();
+    					if(btnCenter.getSelection())
+    						pair = Resize.CenterImages(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    					else if(btnEnlarge.getSelection())
+    						pair = Resize.EnlargeImage(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    					else if(btnShrink.getSelection())
+    						pair = Resize.ShrinkImage(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    					else
+    						pair = Resize.CenterLarger(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    					
+    					if(btnOR.getSelection())
+    						output.set(0, Merge.optionOR(pair.get(0), pair.get(1)));
+    					else if(btnAND.getSelection())
+    						output.set(0, Merge.optionAND(pair.get(0), pair.get(1)));
+    					else
+    						output.set(0, Merge.optionXOR(pair.get(0), pair.get(1)));
+		    		}
+						
+		    	}
+		    	
+		    	for(int i = 0; i<output.size(); i++)
+		    	{
+		    		File outputImage = new File(".\\output\\output_"+i+".jpg");
+		    		try {
+						ImageIO.write(output.get(i), "jpg", outputImage);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		    	}
+		    	output.clear();
+		    	
+		    }});
 		
+		
+	}
+	
+	private boolean isImage(File file)
+	{
+		if(file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".jpg") ||
+    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".jpeg") ||
+    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".png") ||
+    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".bmp") ||
+    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".tiff") ||
+    	file.getPath().substring(file.getPath().lastIndexOf(".")+1, file.getPath().length()).equals(".tif"))
+			return true;
+		else
+			return false;
 	}
 }
