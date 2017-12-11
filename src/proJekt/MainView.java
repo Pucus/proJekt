@@ -43,15 +43,8 @@ import org.eclipse.swt.events.ControlEvent;
 
 public class MainView {
 
-	ArrayList<ArrayList<BufferedImage>> imageMatrix;
 	protected Shell shell;
 	Display display;
-	
-	
-	MainView()
-	{
-		imageMatrix = new ArrayList<ArrayList<BufferedImage>>();
-	}
 	
 	public static void main(String[] args) {
 		try {
@@ -158,12 +151,12 @@ public class MainView {
 		CTabFolder tabFolder = new CTabFolder(ViewingArea, SWT.BORDER | SWT.CLOSE);
 		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		
-		tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() {
+		/*tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() {
 			@Override
 				public void close (CTabFolderEvent event) {
 				    imageMatrix.remove(tabFolder.indexOf((CTabItem)event.item));
 		       }
-		});
+		});*/
 		
 		
 		new Label(shell, SWT.NONE);
@@ -206,7 +199,6 @@ public class MainView {
 		    	    	
 		    	    	//Button dirMark = new Button(composite, SWT.CHECK);
 		    	    	boolean notEmpty = false;
-		    	    	ArrayList<BufferedImage> dirImages = new ArrayList<BufferedImage>();
 		    	    	for (File file : files) {
 		    	    	    if (file.isFile()) {
 		    	    	    	System.out.println(file.getPath());
@@ -223,14 +215,6 @@ public class MainView {
 		    	    	    		Label thumbnail = new Label(cell, SWT.PUSH);
 		    	    	    		thumbnail.setImage(greyImg);
 		    	    	    		inputImg.dispose();
-		    	    	    	
-		    	    	    		
-		    	    	    		
-		    	    	    		try {
-										dirImages.add(ImageIO.read(file));
-									} catch (IOException e1) {
-										e1.printStackTrace();
-									}
 		    	    	    		
 		    	    	    		if(!notEmpty)
 		    	    	    			notEmpty = true;
@@ -251,7 +235,7 @@ public class MainView {
     	    	    		sc.setContent(composite);
     	    	    		sc.setMinSize(tabFolder.getSize());
     	    	    		
-    	    	    		imageMatrix.add(dirImages);
+    	    	    		//imageMatrix.add(dirImages);
 		    	    	}
 		    	    }
 		    	    else 
@@ -264,7 +248,7 @@ public class MainView {
 		    @Override
 		    public void handleEvent(Event event)
 		    {
-		    	if(imageMatrix.isEmpty())
+		    	if(tabFolder.getItemCount()==0)
     	    	{
     	    		MessageBox empty = new MessageBox(shell);
     	    		empty.setMessage("No directories opened");
@@ -272,40 +256,51 @@ public class MainView {
     	    		return;
     	    	}
 		    	ArrayList<BufferedImage> output = new ArrayList<BufferedImage>();
-		    	int maxSize = imageMatrix.get(0).size();
-		    	int maxIndex = 0;
 		    	
 		    	if(btnDefault.getSelection())
 		    	{
-		    		for(int i = 1; i<imageMatrix.size(); i++)
+		    		CTabItem[] dir = tabFolder.getItems();
+		    		int maxIndex = 0;
+		    		int maxSize = 0;
+		    		int imgCounter = 0;
+		    		for(int i = 0; i<dir.length; i++)
 		    		{
-		    			if(imageMatrix.get(i).size() > maxSize)
+		    			File[] files = new File(dir[i].getText()).listFiles();
+		    			for(File file : files)
+		    				if (isImage(file))
+		    					imgCounter++;
+		    			if(imgCounter>maxSize)
 		    			{
-		    				maxSize = imageMatrix.get(i).size();
+		    				maxSize = imgCounter;
 		    				maxIndex = i;
 		    			}
+		    			imgCounter = 0;
 		    		}
-		    		
+		    			
+		    		File[] filesMaxDir = new File(dir[maxIndex].getText()).listFiles();
 		    		for(int i = 0; i<maxSize; i++)
 		    		{
-		    			output.add(IntoGrayscale.grayscale(imageMatrix.get(maxIndex).get(i)));
+		    			if(isImage(filesMaxDir[i]))
+							output.add(IntoGrayscale.grayscale(filesMaxDir[i]));
 		    		}
 		    		
-		    		for(int i = 0; i<imageMatrix.size(); i++)
+		    		for(int i = 0; i<dir.length; i++)
 		    		{
 		    			if(i!=maxIndex)
 		    			{
-		    				for(int j = 0; j<imageMatrix.get(i).size(); j++)
+		    				File[] files = new File(dir[i].getText()).listFiles();
+		    				for(int j = 0; j<files.length; j++)
 		    				{
+		    					if(isImage(files[j])){
 		    					ArrayList<BufferedImage> pair = new ArrayList<BufferedImage>();
 		    					if(btnCenter.getSelection())
-		    						pair = Resize.CenterImages(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    						pair = Resize.CenterImages(output.get(j), IntoGrayscale.grayscale(files[j]));
 		    					else if(btnEnlarge.getSelection())
-		    						pair = Resize.EnlargeImage(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    						pair = Resize.EnlargeImage(output.get(j), IntoGrayscale.grayscale(files[j]));
 		    					else if(btnShrink.getSelection())
-		    						pair = Resize.ShrinkImage(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    						pair = Resize.ShrinkImage(output.get(j), IntoGrayscale.grayscale(files[j]));
 		    					else
-		    						pair = Resize.CenterLarger(output.get(j), IntoGrayscale.grayscale(imageMatrix.get(i).get(j)));
+		    						pair = Resize.CenterLarger(output.get(j), IntoGrayscale.grayscale(files[j]));
 		    					
 		    					if(btnOR.getSelection())
 		    						output.set(j, Merge.optionOR(pair.get(0), pair.get(1)));
@@ -313,6 +308,7 @@ public class MainView {
 		    						output.set(j, Merge.optionAND(pair.get(0), pair.get(1)));
 		    					else
 		    						output.set(j, Merge.optionXOR(pair.get(0), pair.get(1)));
+		    					}
 		    				}
 		    			}
 		    		}	
@@ -329,18 +325,27 @@ public class MainView {
 		    	
 		    	else if(btnAllInDir.getSelection())
 		    	{
-		    		output.add(IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(0)));
-		    		for(int i = 1; i<imageMatrix.get(tabFolder.getSelectionIndex()).size(); i++)
+		    		File[] files = new File(tabFolder.getItem(tabFolder.getSelectionIndex()).getText()).listFiles();
+		    		int imgIndex = 0;
+		    		for(File file : files)
 		    		{
+		    			if(isImage(file))
+		    				break;
+		    			imgIndex++;
+		    		}
+		    		output.add(IntoGrayscale.grayscale(files[imgIndex]));
+		    		for(int i = imgIndex; i<files.length; i++)
+		    		{
+		    			if(isImage(files[i])){
 		    			ArrayList<BufferedImage> pair = new ArrayList<BufferedImage>();
     					if(btnCenter.getSelection())
-    						pair = Resize.CenterImages(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    						pair = Resize.CenterImages(output.get(0), IntoGrayscale.grayscale(files[i]));
     					else if(btnEnlarge.getSelection())
-    						pair = Resize.EnlargeImage(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    						pair = Resize.EnlargeImage(output.get(0), IntoGrayscale.grayscale(files[i]));
     					else if(btnShrink.getSelection())
-    						pair = Resize.ShrinkImage(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    						pair = Resize.ShrinkImage(output.get(0), IntoGrayscale.grayscale(files[i]));
     					else
-    						pair = Resize.CenterLarger(output.get(0), IntoGrayscale.grayscale(imageMatrix.get(tabFolder.getSelectionIndex()).get(i)));
+    						pair = Resize.CenterLarger(output.get(0), IntoGrayscale.grayscale(files[i]));
     					
     					if(btnOR.getSelection())
     						output.set(0, Merge.optionOR(pair.get(0), pair.get(1)));
@@ -348,6 +353,7 @@ public class MainView {
     						output.set(0, Merge.optionAND(pair.get(0), pair.get(1)));
     					else
     						output.set(0, Merge.optionXOR(pair.get(0), pair.get(1)));
+		    			}
 		    		}
 						
 		    	}
