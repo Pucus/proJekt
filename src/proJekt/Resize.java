@@ -18,22 +18,13 @@ public class Resize {
 			int yh, h = img2.getHeight() - img1.getHeight();
 			if (h % 2 == 0) yh = h / 2;
 			else yh = (h+1) / 2;
-			BufferedImage resized = new BufferedImage(img2.getWidth(), img2.getHeight(), BufferedImage.TYPE_INT_BGR);
+			BufferedImage resized = new BufferedImage (img2.getWidth(), img2.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		    Graphics gr = resized.createGraphics ();   
+		    ((Graphics2D) gr).setComposite(AlphaComposite.Clear);
+		    gr.setColor(new Color(0, true));
+		    gr.fillRect(0, 0, img2.getWidth(), img2.getHeight());
+		    gr.dispose();
 		
-			for(int y = 0; y < resized.getHeight(); y++){
-				for(int x = 0; x < resized.getWidth(); x++){
-					int p = resized.getRGB(x,y);
-
-					int r = (p>>16)&0xff;
-					int g = (p>>8)&0xff;
-					int b = p&0xff;
-		        
-					p = 0 | (r<<16) | (g<<8) | b;
-
-					resized.setRGB(x, y, p);
-				}
-		    }
-			
 			for(int y = 0; y < img1.getHeight(); y++){
 				for(int x = 0; x < img1.getWidth(); x++){
 					int p = img1.getRGB(x,y);
@@ -61,21 +52,13 @@ public class Resize {
 			int yh, h = img1.getHeight() - img2.getHeight();
 			if (h % 2 == 0) yh = h / 2;
 			else yh = (h-1) / 2;
-			BufferedImage resized = new BufferedImage(img1.getWidth(), img1.getHeight(), BufferedImage.TYPE_INT_BGR);
-		
-			for(int y = 0; y < resized.getHeight(); y++){
-				for(int x = 0; x < resized.getWidth(); x++){
-					int p = resized.getRGB(x,y);
-
-					int r = (p>>16)&0xff;
-					int g = (p>>8)&0xff;
-					int b = p&0xff;
-		        
-					p = 0 | (r<<16) | (g<<8) | b;
-
-					resized.setRGB(x, y, p);
-				}
-		    }
+			
+			BufferedImage resized = new BufferedImage (img1.getWidth(), img1.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		    Graphics gr = resized.createGraphics ();   
+		    ((Graphics2D) gr).setComposite(AlphaComposite.Clear);
+		    gr.setColor(new Color(0, true));
+		    gr.fillRect(0, 0, img1.getWidth(), img1.getHeight());
+		    gr.dispose();
 			
 			for(int y = 0; y < img2.getHeight(); y++){
 				for(int x = 0; x < img2.getWidth(); x++){
