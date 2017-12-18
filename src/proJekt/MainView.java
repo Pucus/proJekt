@@ -13,6 +13,7 @@ import javax.swing.JFileChooser;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -60,6 +61,7 @@ public class MainView {
 	Button btnOR;
 	Button btnAND;
 	Button btnXOR;
+	Button btnSave;
 	boolean saved = true;
 	
 	public static void main(String[] args) {
@@ -148,15 +150,20 @@ public class MainView {
 		Composite buttonsArea = new Composite(operationsArea, SWT.NONE);
 		buttonsArea.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
-		Button btnMergeImages = new Button(buttonsArea, SWT.NONE);
+		
+		btnSave = new Button(buttonsArea, SWT.PUSH);
+		btnSave.setText("Save");
+		btnSave.setEnabled(false);
+		
+		Button btnMergeImages = new Button(buttonsArea, SWT.WRAP | SWT.PUSH);
 		//btnMergeImages.setForeground(SWTResourceManager.getColor(SWT.COLOR_LIST_FOREGROUND));
 		//btnMergeImages.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
-		btnMergeImages.setText("Merge Images");
+		btnMergeImages.setText("Merge \n Images");
 		
-		Button btnAddDirectory = new Button(buttonsArea, SWT.NONE);
+		Button btnAddDirectory = new Button(buttonsArea, SWT.WRAP | SWT.PUSH);
 		//btnAddDirectory.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
 		//btnAddDirectory.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
-		btnAddDirectory.setText("Add Directory");
+		btnAddDirectory.setText("Add \n Directory");
 		
 		Composite ViewingArea = new Composite(shell, SWT.NONE);
 		ViewingArea.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -167,10 +174,20 @@ public class MainView {
 		CTabFolder tabFolder = new CTabFolder(ViewingArea, SWT.BORDER | SWT.CLOSE);
 		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		
+		ArrayList<BufferedImage> output = new ArrayList<BufferedImage>();
 		
-		
-		new Label(shell, SWT.NONE);
-		
+		btnSave.addListener(SWT.Selection, new Listener() // adding directory
+			{
+			 @Override
+			    public void handleEvent(Event event)
+			    {
+				 FileDialog dialog = new FileDialog(shell, SWT.SAVE);
+				    dialog.setFilterExtensions(new String[] { "*.jpg", "*.JPEG", "*.bmp", "*.png", "*.tif", "*.tiff" });
+				    dialog.setFilterPath("c:\\"); // Windows path
+				    dialog.setFileName("output.jpg");
+				    saveOutput(output, dialog.open());
+
+			    }});
 		btnAddDirectory.addListener(SWT.Selection, new Listener() // adding directory
 		{
 		    @Override
@@ -213,7 +230,7 @@ public class MainView {
 		    		        if (response == SWT.NO)
 		    		        	return;
 		    	}
-		    	ArrayList<BufferedImage> output = new ArrayList<BufferedImage>();
+		    	
 		    	for(CTabItem item : tabFolder.getItems())
 		    		if(item.getText().equals("Output"))
 		    			item.dispose();
@@ -327,7 +344,7 @@ public class MainView {
 	private boolean isImage(File file)
 	{
 		if(file.isFile() && (file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".jpg") ||
-    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".jpeg") ||
+    	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".JPEG") ||
     	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".png") ||
     	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".bmp") ||
     	file.getPath().substring(file.getPath().lastIndexOf("."), file.getPath().length()).equals(".tiff") ||
@@ -412,6 +429,7 @@ public class MainView {
 	
 	private void saveTempOutput(ArrayList<BufferedImage> output, CTabFolder tabFolder)
 	{
+		btnSave.setEnabled(true);
 		saved = false;
 		deleteFolderContent(new File(".\\output"));
 		for(int i = 0; i<output.size(); i++)
@@ -425,7 +443,20 @@ public class MainView {
     	}
     	directoryPreview(tabFolder, ".\\output");
 	}
-
+	
+	private void saveOutput(ArrayList<BufferedImage> output, String path)
+	{
+		for(int i = 0; i<output.size(); i++)
+    	{
+    		File outputImage = new File(path.substring(0, path.lastIndexOf("."))+i+path.substring(path.lastIndexOf(".")));
+    		try {
+				ImageIO.write(output.get(i), path.substring(path.lastIndexOf(".")+1), outputImage);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    	}
+		saved = true;
+	}
 	
 	private void mergeDirectories(ArrayList<BufferedImage> output, ArrayList<String> dir)
 	{
