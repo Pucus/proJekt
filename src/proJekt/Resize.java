@@ -9,7 +9,7 @@ public class Resize {
 	public static ArrayList<BufferedImage> CenterImages(BufferedImage img1, BufferedImage img2)
 	{
 		ArrayList<BufferedImage> resizedImages = new ArrayList<BufferedImage>();
-		if (img1.getWidth() < img2.getWidth()) 
+		if (img1.getWidth() < img2.getWidth() && img1.getHeight() < img2.getHeight())
 		{
 			int xw, w = img2.getWidth() - img1.getWidth();
 			if (w % 2 == 0) xw = w / 2;
@@ -43,7 +43,7 @@ public class Resize {
 			resizedImages.add(img2);
 			return resizedImages;
 		}
-		else
+		else if (img1.getWidth() > img2.getWidth() && img1.getHeight() > img2.getHeight())
 		{
 			int xw, w = img1.getWidth() - img2.getWidth();
 			if (w % 2 == 0) xw = w / 2;
@@ -76,6 +76,121 @@ public class Resize {
 		    }
 			resizedImages.add(resized);
 			resizedImages.add(img1);
+			return resizedImages;
+		}
+		
+		else if (img1.getWidth() < img2.getWidth() && img1.getHeight() > img2.getHeight())
+		{
+			int xw, w = img2.getWidth() - img1.getWidth();
+			if (w % 2 == 0) xw = w / 2;
+			else xw = (w-1) / 2;
+		
+			int yh, h = img1.getHeight() - img2.getHeight();
+			if (h % 2 == 0) yh = h / 2;
+			else yh = (h-1) / 2;
+			
+			BufferedImage resized = new BufferedImage (img2.getWidth(), img1.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		    Graphics gr = resized.createGraphics ();   
+		    ((Graphics2D) gr).setComposite(AlphaComposite.Clear);
+		    gr.setColor(new Color(0, true));
+		    gr.fillRect(0, 0, img2.getWidth(), img1.getHeight());
+		    gr.dispose();
+		    
+		    BufferedImage resized2 = new BufferedImage (img2.getWidth(), img1.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		    Graphics gr2 = resized.createGraphics ();   
+		    ((Graphics2D) gr2).setComposite(AlphaComposite.Clear);
+		    gr2.setColor(new Color(0, true));
+		    gr2.fillRect(0, 0, img2.getWidth(), img1.getHeight());
+		    gr2.dispose();
+			
+			for(int y = 0; y < img1.getHeight(); y++){
+				for(int x = 0; x < img1.getWidth(); x++){
+					int p = img1.getRGB(x,y);
+
+					int a = (p>>24)&0xff;
+					int r = (p>>16)&0xff;
+					int g = (p>>8)&0xff;
+					int b = p&0xff;
+		        
+					p = (a<<24) | (r<<16) | (g<<8) | b;
+
+					resized.setRGB(x + xw, y, p);
+				}
+		    }
+			
+			for(int y = 0; y < img2.getHeight(); y++){
+				for(int x = 0; x < img2.getWidth(); x++){
+					int p = img2.getRGB(x,y);
+
+					int a = (p>>24)&0xff;
+					int r = (p>>16)&0xff;
+					int g = (p>>8)&0xff;
+					int b = p&0xff;
+		        
+					p = (a<<24) | (r<<16) | (g<<8) | b;
+
+					resized2.setRGB(x, y + yh, p);
+				}
+		    }
+			resizedImages.add(resized);
+			resizedImages.add(resized2);
+			return resizedImages;
+		}
+		else
+		{
+			int xw, w = img1.getWidth() - img2.getWidth();
+			if (w % 2 == 0) xw = w / 2;
+			else xw = (w-1) / 2;
+		
+			int yh, h = img2.getHeight() - img1.getHeight();
+			if (h % 2 == 0) yh = h / 2;
+			else yh = (h-1) / 2;
+			
+			BufferedImage resized = new BufferedImage (img1.getWidth(), img2.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		    Graphics gr = resized.createGraphics ();   
+		    ((Graphics2D) gr).setComposite(AlphaComposite.Clear);
+		    gr.setColor(new Color(0, true));
+		    gr.fillRect(0, 0, img1.getWidth(), img2.getHeight());
+		    gr.dispose();
+		    
+		    BufferedImage resized2 = new BufferedImage (img1.getWidth(), img2.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		    Graphics gr2 = resized.createGraphics ();   
+		    ((Graphics2D) gr2).setComposite(AlphaComposite.Clear);
+		    gr2.setColor(new Color(0, true));
+		    gr2.fillRect(0, 0, img1.getWidth(), img2.getHeight());
+		    gr2.dispose();
+			
+			for(int y = 0; y < img1.getHeight(); y++){
+				for(int x = 0; x < img1.getWidth(); x++){
+					int p = img1.getRGB(x,y);
+
+					int a = (p>>24)&0xff;
+					int r = (p>>16)&0xff;
+					int g = (p>>8)&0xff;
+					int b = p&0xff;
+		        
+					p = (a<<24) | (r<<16) | (g<<8) | b;
+
+					resized.setRGB(x, y + yh, p);
+				}
+		    }
+			
+			for(int y = 0; y < img2.getHeight(); y++){
+				for(int x = 0; x < img2.getWidth(); x++){
+					int p = img2.getRGB(x,y);
+
+					int a = (p>>24)&0xff;
+					int r = (p>>16)&0xff;
+					int g = (p>>8)&0xff;
+					int b = p&0xff;
+		        
+					p = (a<<24) | (r<<16) | (g<<8) | b;
+
+					resized2.setRGB(x + xw, y, p);
+				}
+		    }
+			resizedImages.add(resized);
+			resizedImages.add(resized2);
 			return resizedImages;
 		}
 	}
