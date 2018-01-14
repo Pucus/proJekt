@@ -32,12 +32,14 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabFolder2Adapter;
@@ -46,6 +48,9 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 
 
 
@@ -62,7 +67,12 @@ public class MainView {
 	Button btnAND;
 	Button btnXOR;
 	Button btnSave;
+	
+	Combo FadeShadeNoneCombo;
+	Combo FadeShadeOptionsCombo;
+	
 	boolean saved = true;
+	ArrayList<ShadingOptions> shadingOptions = new ArrayList<ShadingOptions>();
 	
 	public static void main(String[] args) {
 		try {
@@ -92,6 +102,21 @@ public class MainView {
 		shell.setSize(700, 600);
 		shell.setText("proJekt");
 		shell.setLayout(new GridLayout(3, false));
+		shell.addListener(SWT.Close, new Listener() {
+		      public void handleEvent(Event event) {
+		    	 if(!saved){
+		    		 MessageBox messageBox = new MessageBox(shell, SWT.ICON_QUESTION
+		    		            | SWT.YES | SWT.NO);
+		    		        messageBox.setMessage("Previous output not saved, proceed?");
+		    		        messageBox.setText("Ouptut not saved");
+		    		        int response = messageBox.open();
+		    		        if(response == SWT.YES)
+		    		        	deleteFolderContent(new File(".\\output"));
+		    		        event.doit = response == SWT.YES;
+		    	 }
+		    	 else
+		    		 deleteFolderContent(new File(".\\output"));
+		      }});
 		
 		Composite operationsArea = new Composite(shell, SWT.NONE);
 		operationsArea.setLayout(new FillLayout(SWT.VERTICAL));
@@ -147,20 +172,48 @@ public class MainView {
 		btnCutOut = new Button(grpResizingMode, SWT.RADIO);
 		btnCutOut.setText("Cut out center of larger image");
 		
-		Composite buttonsArea = new Composite(operationsArea, SWT.NONE);
-		buttonsArea.setLayout(new FillLayout(SWT.HORIZONTAL));
+		Composite buttonsArea1 = new Composite(operationsArea, SWT.NONE);
+		buttonsArea1.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
 		
-		btnSave = new Button(buttonsArea, SWT.PUSH);
+		btnSave = new Button(buttonsArea1, SWT.PUSH);
 		btnSave.setText("Save");
 		btnSave.setEnabled(false);
 		
-		Button btnMergeImages = new Button(buttonsArea, SWT.WRAP | SWT.PUSH);
+		Group FadeShadeSettingsGroup = new Group(buttonsArea1, SWT.NONE);
+		FadeShadeSettingsGroup.setText("Shading options");
+		FadeShadeSettingsGroup.setLayout(new FillLayout(SWT.VERTICAL));
+		 FadeShadeNoneCombo = new Combo(FadeShadeSettingsGroup, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
+		 FadeShadeNoneCombo.add("None");
+		 FadeShadeNoneCombo.add("Fade");
+		 FadeShadeNoneCombo.add("Shade");
+		 FadeShadeNoneCombo.select(0);
+
+		 
+		 FadeShadeOptionsCombo = new Combo(FadeShadeSettingsGroup, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
+		 FadeShadeOptionsCombo.add("Top");
+		 FadeShadeOptionsCombo.add("Bottom");
+		 FadeShadeOptionsCombo.add("Left");
+		 FadeShadeOptionsCombo.add("Right");
+		 FadeShadeOptionsCombo.add("Top-Left");
+		 FadeShadeOptionsCombo.add("Top-Right");
+		 FadeShadeOptionsCombo.add("Bottom-Left");
+		 FadeShadeOptionsCombo.add("Bottom-Right");
+		 FadeShadeOptionsCombo.select(0);
+		 
+
+		//Button btnFadeShadeOptions = new Button(buttonsArea1, SWT.PUSH);
+		//btnFadeShadeOptions.setText("Shading Settings");
+		
+		Composite buttonsArea2 = new Composite(operationsArea, SWT.NONE);
+		buttonsArea2.setLayout(new FillLayout(SWT.HORIZONTAL));
+		
+		Button btnMergeImages = new Button(buttonsArea2, SWT.WRAP | SWT.PUSH);
 		//btnMergeImages.setForeground(SWTResourceManager.getColor(SWT.COLOR_LIST_FOREGROUND));
 		//btnMergeImages.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
 		btnMergeImages.setText("Merge \n Images");
 		
-		Button btnAddDirectory = new Button(buttonsArea, SWT.WRAP | SWT.PUSH);
+		Button btnAddDirectory = new Button(buttonsArea2, SWT.WRAP | SWT.PUSH);
 		//btnAddDirectory.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
 		//btnAddDirectory.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
 		btnAddDirectory.setText("Add \n Directory");
@@ -173,6 +226,39 @@ public class MainView {
 		
 		CTabFolder tabFolder = new CTabFolder(ViewingArea, SWT.BORDER | SWT.CLOSE);
 		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
+		
+		tabFolder.addSelectionListener(new SelectionAdapter() {
+			 @Override
+			 public void widgetSelected(SelectionEvent e) {
+			  tabFolder.getSelection().notifyListeners(SWT.SELECTED, new Event());
+			 }
+			});
+		
+		tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() {
+
+	        @Override
+	        public void close(CTabFolderEvent event) {
+	            CTabItem tabItem = (CTabItem) event.item;
+	            shadingOptions.remove(tabItem.getParent().indexOf(tabItem));
+	        }
+	    });
+		
+		 FadeShadeNoneCombo.addSelectionListener(new SelectionListener() {
+			 public void widgetSelected(SelectionEvent e) {
+				 		if(!shadingOptions.isEmpty())
+				 			shadingOptions.get(tabFolder.getSelectionIndex()).option = FadeShadeNoneCombo.getSelectionIndex();
+			      }
+
+			      public void widgetDefaultSelected(SelectionEvent e) {
+			      }});
+		 FadeShadeOptionsCombo.addSelectionListener(new SelectionListener() {
+			 public void widgetSelected(SelectionEvent e) {
+				 		if(!shadingOptions.isEmpty())
+				 			shadingOptions.get(tabFolder.getSelectionIndex()).direction = FadeShadeOptionsCombo.getSelectionIndex();
+			      }
+
+			      public void widgetDefaultSelected(SelectionEvent e) {
+			      }});
 		
 		ArrayList<BufferedImage> output = new ArrayList<BufferedImage>();
 		
@@ -239,7 +325,7 @@ public class MainView {
 		    		ArrayList<String> dir = new ArrayList<String>();
 		    		for(CTabItem item : tabFolder.getItems())
 		    			dir.add(item.getText());
-		    		mergeDirectories(output, dir);
+		    		mergeDirectories(output, dir, shadingOptions);
 		    		saveTempOutput(output, tabFolder);
 		    	}
 		    	
@@ -284,7 +370,7 @@ public class MainView {
 	    			    	File[] files = new File[dir.size()];
 	    			    	for(int i = 0; i<dir.size(); i++)
 	    			    		files[i] = new File(dir.get(i));
-	    			    	mergeToOneFile(output, files);
+	    			    	mergeToOneFile(output, files, shadingOptions.get(tabFolder.getSelectionIndex()));
 	    			    	saveTempOutput(output, tabFolder);
 	    			    	}
 	    			    	picker.dispose();}});
@@ -294,7 +380,7 @@ public class MainView {
 		    	else if(btnAllInDir.getSelection())
 		    	{
 		    		File[] files = new File(tabFolder.getItem(tabFolder.getSelectionIndex()).getText()).listFiles();
-		    		mergeToOneFile(output, files);
+		    		mergeToOneFile(output, files, shadingOptions.get(tabFolder.getSelectionIndex()));
 					saveTempOutput(output, tabFolder);	
 		    	}
 		    	
@@ -322,12 +408,16 @@ public class MainView {
 		    			    public void handleEvent(Event event)
 		    			    {
 		    			    	ArrayList<String> dir = new ArrayList<String>();
-		    			    	for(TableItem item : table.getItems())
-		    			    		if(item.getChecked())
-		    			    			dir.add(item.getText());
+		    			    	ArrayList<ShadingOptions> shading = new ArrayList<ShadingOptions>();
+		    			    	for(int i = 0; i<table.getItemCount(); i++){
+		    			    		if(table.getItem(i).getChecked()){
+		    			    			dir.add(table.getItem(i).getText());
+		    			    			shading.add(shadingOptions.get(i));
+		    			    		}
+		    			    	}
 		    			    	if(!dir.isEmpty())
 		    			    	{
-		    			    	mergeDirectories(output, dir);
+		    			    	mergeDirectories(output, dir, shading);
 		    			    	saveTempOutput(output, tabFolder);
 		    			    	}
 		    			    	picker.dispose();}});
@@ -354,12 +444,19 @@ public class MainView {
 			return false;
 	}
 	
-	
-	
 	private void directoryPreview(CTabFolder tabFolder, String path)
 	{
 		File[] files = new File(path).listFiles();
     	CTabItem tbtmAdded = new CTabItem(tabFolder, SWT.NONE);
+    	shadingOptions.add(new ShadingOptions());
+    	tbtmAdded.addListener(SWT.SELECTED, new Listener() {
+
+    		 @Override
+    		 public void handleEvent(Event event) {
+    			FadeShadeNoneCombo.select(shadingOptions.get(tabFolder.indexOf(tbtmAdded)).option);
+    			FadeShadeOptionsCombo.select(shadingOptions.get(tabFolder.indexOf(tbtmAdded)).direction);
+    		 }
+    		});
     	tabFolder.setSelection(tbtmAdded);
     	if(path.equals(".\\output"))
     		tbtmAdded.setText("Output");
@@ -455,10 +552,11 @@ public class MainView {
 				e.printStackTrace();
 			}
     	}
+		output.clear();
 		saved = true;
 	}
 	
-	private void mergeDirectories(ArrayList<BufferedImage> output, ArrayList<String> dir)
+	private void mergeDirectories(ArrayList<BufferedImage> output, ArrayList<String> dir, ArrayList<ShadingOptions> shading)
 	{
 	output.clear();
 	int maxIndex = 0;
@@ -483,8 +581,7 @@ public class MainView {
 		
 		if(isImage(filesMaxDir[i]))
 		{
-		
-			output.add(IntoGrayscale.grayscale(filesMaxDir[i]));
+				output.add(applyFadeShade(shading.get(maxIndex),IntoGrayscale.grayscale(filesMaxDir[i])));
 		}
 	}
 	
@@ -501,13 +598,13 @@ public class MainView {
 				if(isImage(files[j])){
 				ArrayList<BufferedImage> pair = new ArrayList<BufferedImage>();
 				if(btnCenter.getSelection())
-					pair = Resize.CenterImages(output.get(k), IntoGrayscale.grayscale(files[j]));
+					pair = Resize.CenterImages(output.get(k), applyFadeShade(shading.get(i),IntoGrayscale.grayscale(files[j])));
 				else if(btnEnlarge.getSelection())
-					pair = Resize.EnlargeImage(output.get(k), IntoGrayscale.grayscale(files[j]));
+					pair = Resize.EnlargeImage(output.get(k), applyFadeShade(shading.get(i),IntoGrayscale.grayscale(files[j])));
 				else if(btnShrink.getSelection())
-					pair = Resize.ShrinkImage(output.get(k), IntoGrayscale.grayscale(files[j]));
+					pair = Resize.ShrinkImage(output.get(k), applyFadeShade(shading.get(i),IntoGrayscale.grayscale(files[j])));
 				else
-					pair = Resize.CenterLarger(output.get(k), IntoGrayscale.grayscale(files[j]));
+					pair = Resize.CenterLarger(output.get(k), applyFadeShade(shading.get(i),IntoGrayscale.grayscale(files[j])));
 				
 				if(btnOR.getSelection())
 					output.set(k, Merge.optionOR(pair.get(0), pair.get(1)));
@@ -522,7 +619,7 @@ public class MainView {
 	}
 	}
 	
-	private void mergeToOneFile(ArrayList<BufferedImage> output, File[] files)
+	private void mergeToOneFile(ArrayList<BufferedImage> output, File[] files, ShadingOptions shading)
 	{
 	output.clear();
 	int imgIndex = 0;
@@ -532,19 +629,19 @@ public class MainView {
 			break;
 		imgIndex++;
 	}
-	output.add(IntoGrayscale.grayscale(files[imgIndex]));
+	output.add(applyFadeShade(shading,IntoGrayscale.grayscale(files[imgIndex])));
 	for(int i = imgIndex; i<files.length; i++)
 	{
 		if(isImage(files[i])){
 		ArrayList<BufferedImage> pair = new ArrayList<BufferedImage>();
 		if(btnCenter.getSelection())
-			pair = Resize.CenterImages(output.get(0), IntoGrayscale.grayscale(files[i]));
+			pair = Resize.CenterImages(output.get(0), applyFadeShade(shading, IntoGrayscale.grayscale(files[i])));
 		else if(btnEnlarge.getSelection())
-			pair = Resize.EnlargeImage(output.get(0), IntoGrayscale.grayscale(files[i]));
+			pair = Resize.EnlargeImage(output.get(0), applyFadeShade(shading, IntoGrayscale.grayscale(files[i])));
 		else if(btnShrink.getSelection())
-			pair = Resize.ShrinkImage(output.get(0), IntoGrayscale.grayscale(files[i]));
+			pair = Resize.ShrinkImage(output.get(0), applyFadeShade(shading, IntoGrayscale.grayscale(files[i])));
 		else
-			pair = Resize.CenterLarger(output.get(0), IntoGrayscale.grayscale(files[i]));
+			pair = Resize.CenterLarger(output.get(0), applyFadeShade(shading, IntoGrayscale.grayscale(files[i])));
 		
 		if(btnOR.getSelection())
 			output.set(0, Merge.optionOR(pair.get(0), pair.get(1)));
@@ -563,5 +660,55 @@ public class MainView {
 	            if(!f.isDirectory()) f.delete();
 	        }
 	    }
+	}
+	
+	private BufferedImage applyFadeShade(ShadingOptions arg, BufferedImage img){
+		if(arg.option == 0)
+			return img;
+		else if(arg.option == 1){
+			switch(arg.direction){
+			case 0:
+				return Fade.fromTop(img);
+			case 1:
+				return Fade.fromBottom(img);
+			case 2:
+				return Fade.fromLeft(img);
+			case 3:
+				return Fade.fromRight(img);
+			case 4:
+				return Fade.fromTopLeft(img);
+			case 5:
+				return Fade.fromTopRight(img);
+			case 6:
+				return Fade.fromBottomLeft(img);
+			case 7:
+				return Fade.fromBottomRight(img);
+			default:
+				return null;
+			}
+		}
+			else {
+				switch(arg.direction){
+				case 0:
+					return Shade.fromTop(img);
+				case 1:
+					return Shade.fromBottom(img);
+				case 2:
+					return Shade.fromLeft(img);
+				case 3:
+					return Shade.fromRight(img);
+				case 4:
+					return Shade.fromTopLeft(img);
+				case 5:
+					return Shade.fromTopRight(img);
+				case 6:
+					return Shade.fromBottomLeft(img);
+				case 7:
+					return Shade.fromBottomRight(img);
+				default:
+					return null;
+				}
+			}
+			
 	}
 }
